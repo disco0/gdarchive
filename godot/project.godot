@@ -9,44 +9,80 @@
 config_version=4
 
 _global_script_classes=[ {
+"base": "Reference",
+"class": "ArchiveTests",
+"language": "GDScript",
+"path": "res://script/Tests.gd"
+}, {
+"base": "DynamicFontData",
+"class": "EditorDynamicFontData",
+"language": "GDScript",
+"path": "res://script/res/EditorDynamicFontData.gd"
+}, {
 "base": "",
 "class": "GDNativeZipFileReader",
 "language": "NativeScript",
 "path": "res://gdnative/gdarchive/ZIPReader.gdns"
+}, {
+"base": "",
+"class": "GDNativeZipFileWriter",
+"language": "NativeScript",
+"path": "res://gdnative/gdarchive/ZIPWriter.gdns"
 }, {
 "base": "Node",
 "class": "Stopwatch",
 "language": "GDScript",
 "path": "res://script/tests/Stopwatch.gd"
 }, {
-"base": "Reference",
-"class": "Tests",
+"base": "PanelContainer",
+"class": "TestPanelBase",
 "language": "GDScript",
-"path": "res://script/Tests.gd"
+"path": "res://script/tests/TestPanelBase.gd"
 }, {
 "base": "Reference",
 "class": "ZIPReader",
 "language": "GDScript",
 "path": "res://gdnative/gdarchive/ZIPReaderHarness.gd"
 }, {
-"base": "PanelContainer",
+"base": "TestPanelBase",
 "class": "ZIPReaderTest",
 "language": "GDScript",
-"path": "res://script/tests/ZIPReader-test.gd"
+"path": "res://script/tests/ZIPReaderTest.gd"
+}, {
+"base": "Reference",
+"class": "ZIPWriter",
+"language": "GDScript",
+"path": "res://gdnative/gdarchive/ZIPWriterHarness.gd"
+}, {
+"base": "TestPanelBase",
+"class": "ZIPWriterTest",
+"language": "GDScript",
+"path": "res://script/tests/ZIPWriterTest.gd"
 } ]
 _global_script_class_icons={
+"ArchiveTests": "",
+"EditorDynamicFontData": "",
 "GDNativeZipFileReader": "",
+"GDNativeZipFileWriter": "",
 "Stopwatch": "",
-"Tests": "",
+"TestPanelBase": "",
 "ZIPReader": "",
-"ZIPReaderTest": ""
+"ZIPReaderTest": "",
+"ZIPWriter": "",
+"ZIPWriterTest": ""
 }
 
 [application]
 
-config/name="demo"
+config/name="godot-archive-rust"
 run/main_scene="res://scene/tests.tscn"
 config/icon="res://icon.png"
+
+[debug]
+
+gdscript/completion/autocomplete_setters_and_getters=true
+gdscript/warnings/shadowed_variable=false
+gdscript/warnings/unsafe_cast=true
 
 [display]
 
@@ -62,4 +98,5 @@ common/enable_pause_aware_picking=true
 
 [rendering]
 
+misc/lossless_compression/webp_compression_level=0
 environment/default_environment="res://default_env.tres"

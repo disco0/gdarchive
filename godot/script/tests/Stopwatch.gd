@@ -5,8 +5,8 @@ extends Node
 const TIME_UNSET: int = -1
 const SECTION_UNSET := ""
 
-var total        := TIME_UNSET
-var start        := TIME_UNSET
+var total_usec   := TIME_UNSET
+var start_usec   := TIME_UNSET
 var last_time    := TIME_UNSET
 var longest_time := 0
 var times        := PoolIntArray()
@@ -22,36 +22,36 @@ func _init() -> void:
 
 
 func clear() -> void:
-	total     = TIME_UNSET
-	start     = TIME_UNSET
+	total_usec     = TIME_UNSET
+	start_usec     = TIME_UNSET
 	last_time = TIME_UNSET
 	times     = PoolIntArray()
-	
+
 	sections          = { }
 	curr_section      = PoolIntArray()
 	curr_section_name = SECTION_UNSET
 
 
 func start() -> void:
-	assert(start == TIME_UNSET, "repeat start call")
-	start = Time.get_ticks_usec()
+	assert(start_usec == TIME_UNSET, "repeat start call")
+	start_usec = Time.get_ticks_usec()
 
 
 func stop() -> void:
-	assert(start != TIME_UNSET, "stop with no starting time")
+	assert(start_usec != TIME_UNSET, "stop with no starting time")
 
 	# Record "lap"
-	last_time = Time.get_ticks_usec() - start
+	last_time = Time.get_ticks_usec() - start_usec
 	times.push_back(last_time)
 	if curr_section_name != SECTION_UNSET:
 		curr_section.push_back(last_time)
 	if last_time > longest_time:
 		longest_time = last_time
 
-	# Add to total time
-	total += last_time
+	# Add to total_usec time
+	total_usec += last_time
 
-	start = TIME_UNSET
+	start_usec = TIME_UNSET
 
 
 func begin_section(name: String) -> void:
