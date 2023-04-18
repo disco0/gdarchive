@@ -1,8 +1,13 @@
-[gd_resource type="DynamicFont" load_steps=2 format=2]
+[gd_resource type="DynamicFont" load_steps=3 format=2]
 
-[ext_resource path="res://Iosevka Medium Nerd Font Complete Mono.ttf" type="DynamicFontData" id=1]
+[ext_resource path="res://script/res/EditorDynamicFontData.gd" type="Script" id=1]
+
+[sub_resource type="DynamicFontData" id=1]
+font_path = "C:/Windows/Fonts/iosevka-extended-regular.ttf"
+script = ExtResource( 1 )
+editor_font_property = "interface/editor/code_font"
 
 [resource]
 size = 15
 use_mipmaps = true
-font_data = ExtResource( 1 )
+font_data = SubResource( 1 )
