@@ -58,6 +58,16 @@ _global_script_classes=[ {
 "class": "ZIPWriterTest",
 "language": "GDScript",
 "path": "res://script/tests/ZIPWriterTest.gd"
+}, {
+"base": "",
+"class": "ZipBufferReader",
+"language": "NativeScript",
+"path": "res://gdnative/gdarchive/ZipBufferReader.gdns"
+}, {
+"base": "",
+"class": "ZipPacker",
+"language": "NativeScript",
+"path": "res://gdnative/gdarchive/ZIPPacker.gdns"
 } ]
 _global_script_class_icons={
 "ArchiveTests": "",
@@ -69,7 +79,9 @@ _global_script_class_icons={
 "ZIPReader": "",
 "ZIPReaderTest": "",
 "ZIPWriter": "",
-"ZIPWriterTest": ""
+"ZIPWriterTest": "",
+"ZipBufferReader": "",
+"ZipPacker": ""
 }
 
 [application]

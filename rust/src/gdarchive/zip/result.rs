@@ -1,9 +1,22 @@
 use gdnative::prelude::*;
 use gdnative::core_types::{ToVariant, FromVariant, FromVariantError};
 
-pub (crate) enum ZipWriteErr {
-    OK    = 0,
-    ERROR = 1,
+
+pub enum ZipWriteErr
+{
+    OK,
+    ERROR,
+}
+
+impl Into<i32> for ZipWriteErr
+{
+    fn into(self) -> i32 {
+        match self
+        {
+            ZipWriteErr::OK => 0,
+            ZipWriteErr::ERROR => 1,
+        }
+    }
 }
 
 impl ToVariant for ZipWriteErr
@@ -34,3 +47,5 @@ impl FromVariant for ZipWriteErr
         }
     }
 }
+
+pub type ZipReadErr = ZipWriteErr;

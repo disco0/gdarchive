@@ -9,6 +9,7 @@ class_name ZIPReader
 
 #section members
 
+
 const ERR_BYTEARRAY := PoolByteArray()
 
 var _instance
@@ -21,8 +22,6 @@ var trace: bool setget set_trace, get_trace
 
 func _init() -> void:
 	_instance = GDNativeZipFileReader.new()
-
-	pass
 
 
 #section methods
@@ -80,16 +79,3 @@ func uncompress(path: String) -> PoolByteArray:
 
 func _get_zip_path() -> String:
 	return _instance.path as String
-
-
-#section statics
-
-#
-#static func ResolveNativeScript():
-#	var target = "debug" if OS.has_feature('debug') else "release" if OS.has_feature("release") else ""
-#	assert(not target.empty(), "Failed to get target.")
-#
-#	if target == "release":
-#		return load(NativeScriptReleasePath)
-#	else: #target == "debug
-#		return load(NativeScriptDebugPath)

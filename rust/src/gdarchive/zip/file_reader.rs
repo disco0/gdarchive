@@ -1,53 +1,89 @@
+use gdnative::core_types::GodotResult;
 use gdnative::prelude::*;
 use gdnative::api::*;
 use gdnative::api::ProjectSettings;
-use gdnative::core_types::{ByteArray, StringArray};
 
 use zip;
-use zip::{ ZipArchive, read::ZipFile };
+use zip::ZipArchive;
 
-use std::io::BufReader;
 use std::io::Read;
 
-use bytes::{ Buf, Bytes };
+use itertools::Itertools;
 
-use crate::archive_reader::zip_read_err::*;
-use crate::archive_reader::reader::ArchiveReader;
+use crate::gdarchive::archive::ArchiveReader;
+use crate::gdarchive::zip::result::*;
+use crate::gdarchive::util::{PoolStringArray, PoolByteArray, *};
+
+
+macro_rules! set_failed
+{
+    ($self:expr) => {{
+        $self._read_fail = true;
+        return PoolStringArray::new();
+    }};
+
+    ($self:expr, $l:expr) => {{
+        $self._read_fail = true;
+        return $l;
+    }};
+}
 
 #[derive(NativeClass)]
 #[inherit(Resource)]
 #[register_with(Self::_register_methods)]
-pub struct ZipPoolByteArrayReader
+pub struct ZipFileReader
 {
-    _buf:       Option<Bytes>,
-    _zip:       Option<ZipArchive<Bytes>>,
+    _file:      Option<Ref<File, Unique>>,
+    _zip:       Option<ZipArchive<std::fs::File>>,
     _zip_paths: Vec::<String>,
+
     #[property]
     path:       String,
+    /// Used to indicate a returned empty *Array is failure vs. actually empty
+    #[property(no_editor, get)]
+    _read_fail: bool,
+    #[property]
+    trace:      bool,
 }
 
-impl ArchiveReader for ZipPoolByteArrayReader
+impl ArchiveReader for ZipFileReader
 {
-    fn _close(&mut self) //  -> u32 {
+    fn _close(&mut self) -> GodotResult
     {
-        self._buf = None;
+        self._file.as_ref().map(|file| file.close());
         self._zip = None;
         self.path = "".to_string();
+        self._read_fail = false;
+        Ok(())
     }
 
-    fn _get_paths(&mut self) -> StringArray
+    fn _get_paths(&mut self) -> PoolStringArray
     {
-        if let Some(paths) = self.build_paths()
+        self._read_fail = false;
+        if let Some(built_paths) = self.build_paths()
         {
-            paths.into_iter()
-                 .map(GodotString::from_str)
-                 .collect()
+            if self.trace
+            {
+                let paths: PoolStringArray =
+                             built_paths.into_iter()
+                                        .map(GodotString::from_str)
+                                        .collect();
+                self._log(format!{ "Resolved {} paths.", paths.len() });
+                paths
+            }
+            else
+            {
+                built_paths.into_iter()
+                           .map(GodotString::from_str)
+                           .collect()
+            }
         }
-        else { StringArray::new() }
+        else { set_failed!(self) }
     }
 
-    fn _get_files(&mut self) -> StringArray
+    fn _get_files(&mut self) -> PoolStringArray
     {
+        self._read_fail = false;
         if let Some(paths) = self.build_paths()
         {
             paths.into_iter()
@@ -55,23 +91,25 @@ impl ArchiveReader for ZipPoolByteArrayReader
                  .map(GodotString::from_str)
                  .collect()
         }
-        else { StringArray::new() }
+        else { set_failed!(self) }
     }
 
-    fn _get_dirs(&mut self) -> StringArray
+    fn _get_dirs(&mut self) -> PoolStringArray
     {
+        self._read_fail = false;
         if let Some(paths) = self.build_paths()
         {
             paths.into_iter()
                  .filter(is_directory_string)
                  .map(GodotString::from_str)
-                 .collect()
+                 .collect::<PoolStringArray>()
         }
-        else { StringArray::new() }
+        else { set_failed!(self) }
     }
 
     fn _has_path(&mut self, p_path: String) -> bool
     {
+        self._read_fail = false;
         if self._zip.is_none()
         {
             godot_error!("Zip file not opened yet.");
@@ -86,9 +124,10 @@ impl ArchiveReader for ZipPoolByteArrayReader
         self._zip_paths.contains(&p_path)
     }
 
-    fn _read_file(&mut self, p_path: String) -> ByteArray
+    fn _read_file(&mut self, p_path: String) -> PoolByteArray
     {
-        let mut bytes = ByteArray::new();
+        self._read_fail = false;
+        let mut bytes = PoolByteArray::new();
         if self._zip.is_none()
         {
             godot_error!("Zip file not opened yet.");
@@ -107,11 +146,9 @@ impl ArchiveReader for ZipPoolByteArrayReader
                 {
                     let inflated_size = zip_file.size() as usize;
                     let mut inflated = Vec::with_capacity(inflated_size);
-                    if let Ok(_read_size) = zip_file.read_to_end(&mut inflated)
-                    {
-                        // godot_print!(" -> Read {} bytes.", read_size)
-                        bytes.append_vec(&mut inflated);
-                    }
+                    let _ = zip_file.read_to_end(&mut inflated)
+                                    .and_then(|_| Ok(bytes.append_vec(&mut inflated)))
+                                    .or_else(|_| Err(godot_error!("Archive file read_to_end failed.")));
                 }
                 else
                 {
@@ -124,85 +161,77 @@ impl ArchiveReader for ZipPoolByteArrayReader
     }
 }
 
+impl ZipFileReader
+{
+    fn _log(&mut self, msg: String)
+    {
+        if self.trace { godot_print!("[ZipFileReader] {}", msg) }
+    }
+}
 
 #[methods]
-impl ZipPoolByteArrayReader
+impl ZipFileReader
 {
     fn _register_methods(_builder: &ClassBuilder<Self>)
     {
-        godot_print!("Initialized ZipPoolByteArrayReader")
     }
 
     /// The "constructor" of the class.
     fn new(_base: &Resource) -> Self
     {
-        godot_print!("Initializing ZipFileReader");
-        ZipPoolByteArrayReader {
-            _buf: None,
-            _zip: None,
+        ZipFileReader {
+            _file:      None,
+            _zip:       None,
             _zip_paths: Vec::<String>::new(),
-            path: "".to_string()
+            path:       "".to_string(),
+            _read_fail: false,
+            trace:      false,
         }
     }
 
-    fn build_buf(&mut self, byte_arr: ByteArray)
-    {
-        // let mut reader = Bytes::from().as_mut().reader();
-        // let mut reader = BufReader::new(buf);
-
-        let mut zip_reader = ZipArchive::new(byte_arr.to_vec());
-    }
-
-    fn from_zipfile(&mut self, zip_file: ZipFile)
-    {
-        // let mut reader = Bytes::from().as_mut().reader();
-        // let mut reader = BufReader::new(buf);
-
-        let mut zip_reader = ZipArchive::new(zip_file.bytes());
-    }
-
     #[method]
-    fn open(&mut self, buf: ByteArray) -> ZipReadErr
+    fn open(&mut self, p_path: String) -> i32
     {
-
         self.close();
-        godot_print!("Opening {}", p_path);
+        self._log(format!{"Opening {}", p_path});
 
         let ps = ProjectSettings::godot_singleton();
         let global_path = ps.globalize_path(p_path.clone()).to_string();
 
         let gdfile = File::new();
-        let fs_file_path = global_path.clone();
-        let self_path = global_path.clone();
-        if gdfile.file_exists(p_path.to_string())
+        if gdfile.file_exists(p_path.clone())
         {
             if let Ok(_) = gdfile.open(p_path, File::READ)
             {
                 let file =
-                    std::fs::File::open(fs_file_path)
+                    std::fs::File::open(global_path.clone())
                                   .expect("Failed to open std file handle");
                 let reader =
                     zip::ZipArchive::new(file)
                     .expect("Failed to open reader for zip file.");
                 self._zip = Some(reader);
                 self._file = Some(gdfile);
-                self.path = self_path;
-                ZipReadErr::OK
+                self.path = global_path.clone();
+
+                ZipReadErr::OK.into()
             }
             else
             {
-                ZipReadErr::ERROR
+                ZipReadErr::ERROR.into()
             }
-        } else {
-            godot_error!("Failed to open archive at path {}", p_path);
-            ZipReadErr::ERROR
+        }
+        else
+        {
+            godot_error!("Failed to open archive at path {:?}: does not exist", p_path);
+            ZipReadErr::ERROR.into()
         }
     }
 
     #[method]
-    fn close(&mut self) //  -> u32 {
+    fn close(&mut self) -> i32
     {
-        self._close()
+        if self._close().is_ok() { 0 }
+        else { 1 }
     }
 
     /// Internal path builder
@@ -212,6 +241,7 @@ impl ZipPoolByteArrayReader
         {
             godot_error!("Zip file not opened yet.");
         }
+
         if self._zip_paths.is_empty()
         {
             self.collect_zip_paths();
@@ -221,19 +251,19 @@ impl ZipPoolByteArrayReader
     }
 
     #[method]
-    fn get_paths(&mut self) -> StringArray
+    fn get_paths(&mut self) -> PoolStringArray
     {
         self._get_paths()
     }
 
     #[method]
-    fn get_files(&mut self) -> StringArray
+    fn get_files(&mut self) -> PoolStringArray
     {
         self._get_files()
     }
 
     #[method]
-    fn get_dirs(&mut self) -> StringArray
+    fn get_dirs(&mut self) -> PoolStringArray
     {
         self._get_dirs()
     }
@@ -248,15 +278,17 @@ impl ZipPoolByteArrayReader
     {
         self._zip_paths = self._zip
             .as_ref()
-            .expect("Attempted reference uninitialized zip archive reference")
+            .expect("Attempted reference of uninitialized zip archive reference")
             .file_names()
             .map(String::from)
-            .collect();
+            .sorted()
+            .collect::<Vec::<String>>();
     }
 
     #[method]
-    fn read_file(&mut self, p_path: String) -> ByteArray
+    fn read_file(&mut self, p_path: String) -> PoolByteArray
     {
+        self._log(format!{ "Reading file: {p_path}" });
         self._read_file(p_path)
     }
 }

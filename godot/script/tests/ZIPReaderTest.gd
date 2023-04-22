@@ -34,14 +34,6 @@ func test() -> void:
 
 	yield(test_archives_expansion(), "completed")
 
-	#output_section("Testing File Extraction")
-	#var result = yield(test_archive_extraction(), "completed")
-
-	#if result != true:
-	#	var msg := "Expansion test failed with return value: %s " % [ result ]
-	#	output_error(msg)
-	#	assert(result == true, msg)
-
 
 func test_archives_read_tree(archive_paths := ArchiveTests.GetTestArchives()) -> String:
 	var instance := ZIPReader.new()
@@ -85,10 +77,7 @@ func test_archives_expansion():
 
 	var file_list: Array
 	var zip_path:  String
-	#for archive_name in ArchiveTests.TestLists.Full.keys():
-	#	zip_path = ArchiveTests.Base.plus_file(archive_name)
 	for archive_path in ArchiveTests.GetTestArchives():
-		#file_list = ArchiveTests.TestLists.Full[archive_name]
 		zip_path = archive_path
 
 		output('Loading %s' % [ zip_path ])
@@ -190,8 +179,6 @@ func test_archive_extraction(archive_paths := ArchiveTests.GetTestArchives(), ou
 		assert(mkdirp_err == OK, 'Error creating output directory: %s (%s)' % [ mkdirp_err, out_dir ])
 		if mkdirp_err != OK:
 			return false
-
-	#return true
 
 	###
 	### Prepare for tests, clean output dir (except .gdignore)

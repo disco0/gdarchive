@@ -13,7 +13,8 @@ use path_slash::PathExt;
 
 use walkdir::{DirEntry, WalkDir};
 
-use crate::archive_reader::archive_write_err::ZipWriteErr;
+use crate::gdarchive::result::ZipWriteErr;
+
 
 #[derive(NativeClass)]
 #[inherit(Resource)]
@@ -29,18 +30,17 @@ pub struct ZipFileWriter
     trace:       bool
 }
 
-
 #[methods]
 impl ZipFileWriter
 {
     fn _register_methods(_builder: &ClassBuilder<Self>)
     {
-        godot_print!("Registering ZipFileWriter");
+        // godot_print!("Registering ZipFileWriter");
     }
 
     fn new(_base: &Resource) -> Self
     {
-        godot_print!("Initializing ZipFileWriter");
+        // godot_print!("Initializing ZipFileWriter");
         ZipFileWriter {
             output_path: "".to_string(),
             source_dir:  "".to_string(),
@@ -68,8 +68,7 @@ impl ZipFileWriter
 
         let global_output_path = ps.globalize_path(self.output_path.clone()).to_string();
 
-        if let Err(err) = self._write_zip(global_source_dir,
-                                                  global_output_path)
+        if let Err(err) = self._write_zip(global_source_dir, global_output_path)
         {
             godot_error!("Error creating zip file: {err}");
             ZipWriteErr::ERROR
@@ -130,6 +129,7 @@ impl ZipFileWriter
                 zip.add_directory_from_path(name, options)?;
             }
         }
+
         zip.finish()?;
         Result::Ok(())
     }

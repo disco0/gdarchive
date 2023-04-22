@@ -3,6 +3,6 @@
 [ext_resource path="./gdarchive.gdnlib" type="GDNativeLibrary" id=1]
 
 [resource]
-class_name = "ZipFileWriter"
+class_name = "ZipBufferReader"
 library = ExtResource( 1 )
-script_class_name = "GDNativeZipFileWriter"
+script_class_name = "ZipBufferReader"
