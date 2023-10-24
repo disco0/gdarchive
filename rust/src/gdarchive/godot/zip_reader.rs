@@ -31,7 +31,7 @@ macro_rules! set_failed
 #[derive(NativeClass)]
 #[inherit(Resource)]
 #[register_with(Self::_register_methods)]
-pub struct ZipFileReader
+pub struct ZipReader
 {
     _file:      Option<Ref<File, Unique>>,
     _zip:       Option<ZipArchive<std::fs::File>>,
@@ -46,7 +46,7 @@ pub struct ZipFileReader
     trace:      bool,
 }
 
-impl ArchiveReader for ZipFileReader
+impl ArchiveReader for ZipReader
 {
     fn _close(&mut self) -> GodotResult
     {
@@ -161,7 +161,7 @@ impl ArchiveReader for ZipFileReader
     }
 }
 
-impl ZipFileReader
+impl ZipReader
 {
     fn _log(&mut self, msg: String)
     {
@@ -170,7 +170,7 @@ impl ZipFileReader
 }
 
 #[methods]
-impl ZipFileReader
+impl ZipReader
 {
     fn _register_methods(_builder: &ClassBuilder<Self>)
     {
@@ -179,7 +179,7 @@ impl ZipFileReader
     /// The "constructor" of the class.
     fn new(_base: &Resource) -> Self
     {
-        ZipFileReader {
+        ZipReader {
             _file:      None,
             _zip:       None,
             _zip_paths: Vec::<String>::new(),
@@ -291,4 +291,15 @@ impl ZipFileReader
         self._log(format!{ "Reading file: {p_path}" });
         self._read_file(p_path)
     }
+}
+
+/// @TODO: Align interface to [Godot `4.0` implementation](https://docs.godotengine.org/en/stable/classes/class_zipreader.html).
+/// ideally use this trait directly (via mixin?) but for now just mirror it
+pub trait GodotZipReader
+{
+    fn open(&mut self, p_path: GodotString) -> i32;
+    fn close(&mut self, p_path: GodotString) -> i32;
+
+	fn get_files(&mut self) -> PoolStringArray;
+	fn read_file(&mut self, p_path: GodotString, p_case_sensitive: bool) -> PoolArray<u8>;
 }

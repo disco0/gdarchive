@@ -1,0 +1,41 @@
+{
+    "files.associations":
+    {
+    },
+
+    "highlight.regexes":
+    {
+        "(?<=\\s)((?:x86\\w+|i686|arm(?:v\\d)|aarch)[^\\s,]+?(?:debug|release))":
+        {
+            "filterLanguageRegex": "liquid",
+            "regexFlags": "gm",
+            "decorations": [
+                {
+                    "color": "#AA0088",
+                    "fontStyle": "oblique",
+                    "textDecoration": "underline"
+                }
+            ]
+        }
+    },
+
+    "editor.tokenColorCustomizations": {"[WinClassic]": {"textMateRules": [
+        {
+            "scope":
+            [
+                "meta.macro.metavariable.rust keyword.operator.macro.dollar.rust",
+                "meta.macro.metavariable.rust variable.other.metavariable.name.rust",
+            ],
+            "settings": {
+                "foreground": "#AA0088",
+                "fontStyle": "italic"
+            }
+        }
+    ]
+}
+},
+"rust-analyzer.linkedProjects": [
+    "rust/Cargo.toml"
+],
+"rust-analyzer.showUnlinkedFileNotification": false
+}

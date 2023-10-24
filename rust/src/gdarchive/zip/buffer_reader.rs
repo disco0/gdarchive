@@ -22,8 +22,6 @@ pub struct ZipBufferReader
     _buf:       Option<PoolByteArray>,
     _zip:       Option<ZipArchive<std::fs::File>>,
     _zip_paths: Vec::<String>,
-    // #[property]
-    // path:       String,
 }
 
 impl ArchiveReader for ZipBufferReader

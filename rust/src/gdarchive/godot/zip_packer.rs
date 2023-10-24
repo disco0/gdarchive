@@ -33,9 +33,9 @@ impl ZipPacker
         //godot_print!("Registering ZipFileReader");
     }
 
-    fn _log(&mut self, msg: String)
+    fn _log(&self, msg: String)
     {
-        godot_print!("[ZipPacker] {}", msg);
+        if self.trace { godot_print!("[ZipPacker] {}", msg); };
     }
 }
 
@@ -58,7 +58,7 @@ impl GodotZipPacker for ZipPacker
     fn open(&mut self, p_path: GodotString, #[opt] p_append: ZipAppend) -> i32
     {
         self.close();
-        if self.trace { self._log(format!{"Opening {}", p_path}) };
+        self._log(format!{"Opening {}", p_path});
 
         let global_path = ProjectSettings::godot_singleton()
                                         .globalize_path(p_path.clone()).to_string();
@@ -69,7 +69,7 @@ impl GodotZipPacker for ZipPacker
         let fs_path = std::path::Path::new(&_fs_path_string);
 
         self._mode = p_append;
-        if self.trace { self._log(format!("Opening file at path \"{global_path}\"")) };
+        self._log(format!{"Opening file at path \"{global_path}\""});
 
         let file =
             std::path::Path::try_exists(fs_path)
@@ -152,7 +152,7 @@ impl GodotZipPacker for ZipPacker
     #[method]
     fn write_file(&mut self, p_data: PoolArray::<u8> ) -> i32
     {
-        if self.trace { self._log(format!{"Writing {} bytes to zip", p_data.len()}); }
+        self._log(format!{"Writing {} bytes to zip", p_data.len()});
 
         if let Some(zip) = self._zip.as_mut()
         {

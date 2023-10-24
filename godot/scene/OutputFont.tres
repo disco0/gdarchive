@@ -3,7 +3,7 @@
 [ext_resource path="res://script/res/EditorDynamicFontData.gd" type="Script" id=1]
 
 [sub_resource type="DynamicFontData" id=1]
-font_path = "C:/Windows/Fonts/iosevka-extended-regular.ttf"
+font_path = ""
 script = ExtResource( 1 )
 editor_font_property = "interface/editor/code_font"
 
